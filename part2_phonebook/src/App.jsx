@@ -1,35 +1,66 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useState } from "react";
 
-function App() {
-  const [count, setCount] = useState(0)
+const App = () => {
+  const [persons, setPersons] = useState([
+    { name: "Arto Hellas", number: "040-1234567" },
+  ]);
+  const [newName, setNewName] = useState("");
+  const [newNumber, setNewNumber] = useState(null);
+
+  const addName = (e) => {
+    e.preventDefault();
+    if (
+      persons.some(
+        (person) => person.name === newName || person.number === newNumber
+      )
+    ) {
+      alert(`${newName} is already added to the phonebook`);
+      return;
+    }
+    const contactObj = {
+      name: newName,
+      number: newNumber,
+    };
+
+    setPersons([...persons, contactObj]);
+    setNewName("");
+  };
 
   return (
-    <>
+    <div>
+      <h2>Phonebook</h2>
       <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+        <label htmlFor="search">Filter shown with</label>{" "}
+        <input type="text" id="search" />
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
+      <div>
+        <h2>Add a New</h2>
       </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
-}
 
-export default App
+      <form onSubmit={addName}>
+        <div>
+          name:{" "}
+          <input value={newName} onChange={(e) => setNewName(e.target.value)} />
+        </div>
+        <div>
+          number:{" "}
+          <input
+            value={newNumber}
+            onChange={(e) => setNewNumber(e.target.value)}
+          />
+        </div>
+        <div>
+          <button type="submit">add</button>
+        </div>
+      </form>
+      <h2>Numbers</h2>
+      {persons.map((person, i) => (
+        <p key={i}>
+          {person.name} {person.number}
+        </p>
+      ))}
+    </div>
+  );
+};
+
+export default App;
