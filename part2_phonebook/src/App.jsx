@@ -1,23 +1,25 @@
-import React, { useState, useEffect } from "react";
-import Filter from "./Filter";
-import PersonForm from "./PersonForm";
-import Persons from "./Persons";
-import axios from "axios";
+import { useState, useEffect } from 'react';
+import Filter from './Filter';
+import PersonForm from './PersonForm';
+import Persons from './Persons';
+import personServices from './services/persons';
 
 const App = () => {
   const [persons, setPersons] = useState([]);
-  const [newName, setNewName] = useState("");
-  const [newNumber, setNewNumber] = useState("");
-  const [search, setSearch] = useState("");
+  const [newName, setNewName] = useState('');
+  const [newNumber, setNewNumber] = useState('');
+  const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
     const fetchPersons = async () => {
       try {
-        const res = await axios.get("http://localhost:3001/persons");
-        const notes = res.data;
-        setPersons(notes);
+        // const res = await axios.get("http://localhost:3001/persons");
+        // const notes = res.data;
+        const res = await personServices.getAll();
+        const persons = res.data;
+        setPersons(persons);
         setLoading(false);
       } catch (err) {
         setError(err.message);
@@ -29,27 +31,44 @@ const App = () => {
   }, []);
 
   const addName = (name, number) => {
-    if (
-      persons.some((person) => person.name === name || person.number === number)
-    ) {
-      alert(`${name} is already added to the phonebook`);
+    if (persons.some((person) => person.name === name || person.number === number)) {
+      const change = window.confirm(`${name} is already added to the phonebook. Do you want to override the number?`);
+      if (change) {
+        updateContact(name, number);
+      }
+
+      setNewName('');
+      setNewNumber('');
       return;
     }
 
     const contactObj = {
       name,
       number,
-      id: persons.length + 1,
     };
 
-    setPersons([...persons, contactObj]);
-    setNewName("");
-    setNewNumber("");
+    personServices.create(contactObj).then((response) => {
+      setPersons([...persons, response.data]);
+    });
+
+    setNewName('');
+    setNewNumber('');
+  };
+  const updateContact = (name, number) => {
+    const clonedPersons = persons.map((person) => (person.name === name ? { ...person, number } : person));
+    setPersons(clonedPersons);
   };
 
-  const filteredPersons = persons.filter((person) =>
-    person.name.toLowerCase().includes(search.toLowerCase())
-  );
+  const deleteContact = (id) => {
+    const confirmDelete = window.confirm('Are you sure?');
+    if (confirmDelete) {
+      personServices.remove(id).then(() => {
+        setPersons(persons.filter((person) => person.id !== id));
+      });
+    }
+  };
+
+  const filteredPersons = persons.filter((person) => person.name.toLowerCase().includes(search.toLowerCase()));
 
   if (loading) {
     return <div>Loading...</div>;
@@ -71,7 +90,7 @@ const App = () => {
         addName={addName}
       />
       <h2>Numbers</h2>
-      <Persons filteredPersons={filteredPersons} />
+      <Persons filteredPersons={filteredPersons} removeContact={deleteContact} />
     </div>
   );
 };
